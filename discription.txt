@@ -1,0 +1,26 @@
+discription
+
+batch: 8
+epoch: 1
+loss: 4.4005
+val_loss: 4.1063
+last epoch: 48s, 4s/step
+
+batch: 8
+epoch: 3
+loss: 3.9419
+val_loss: 3.8212
+last epoch: 21s 3s/step
+
+batch: 8
+epoch: 4
+loss: 3.8095
+val_loss: 3.7374
+last epoch: 19s 3s/step
+
+test sample:
+
+original text = "./example_text.txt"
+summarize = 
+Maria learned how to process complex imaging data. at her first job in a neuroscience startup, she learned to bridge research and product, turning AI models into solutions that improve patient care.
+
