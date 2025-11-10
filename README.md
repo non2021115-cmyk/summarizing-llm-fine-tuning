@@ -11,4 +11,8 @@ It was simply created by chatgpt and from
 <br>and
 <br>https://huggingface.co/docs/transformers/ko/training#train-a-tensorflow-model-with-keras
 
+env:
+<br>pip install "tensorflow==2.20.0" "tf-keras==2.20.1"
+<br>pip install "transformers==4.44.2" "datasets>=2.20.0" "tokenizers==0.19.1" "safetensors>=0.4.4"
+
 <br>Have a nice gamuuuuu
