@@ -16,6 +16,8 @@ env:
 <br>pip install "transformers==4.44.2" "datasets>=2.20.0" "tokenizers==0.19.1" "safetensors>=0.4.4"
 <br>pip install huggingface_hub
 <br>pip install ipywidgets
+<br>pip install datasets
+
 
 
 <br>Have a nice gamuuuuu
