@@ -22,4 +22,5 @@ requirements:
 <br>pip install -r requirements.txt
 
 
-<br>Have a nice gamuuuuu
+<br>Have a naisu gamuuuuu
+<br><img width="686" height="386" alt="image" src="https://github.com/user-attachments/assets/ce42acbe-5fb2-4063-b851-f5a7b501cbca" />
