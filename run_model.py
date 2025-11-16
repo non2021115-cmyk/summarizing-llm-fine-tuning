@@ -3,7 +3,7 @@ import tensorflow as tf
 
 MODEL_DIR = "./out-tf"  # out-tf 폴더 경로 (PowerShell 경로 OK)
 PREFIX = "summarize: "
-sample_text = open("./example_text.txt", encoding="utf-8").read()
+sample_text = open("./example_text_eng.txt", encoding="utf-8").read()
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR, use_fast=True)
 model = TFAutoModelForSeq2SeqLM.from_pretrained(MODEL_DIR)  # 폴더에서 직접 로드
@@ -26,3 +26,4 @@ def summarize(texts):
 if __name__ == "__main__":
     sample = sample_text
     print(summarize(sample)[0])
+
