@@ -1,5 +1,26 @@
 discription
 
+translation
+raw text:
+But here’s what’s valuable for you to notice. 중요한 포인트는 이거야.
+At each point in her journey, she had to adapt and grow, 즉 매 단계마다 변화에 맞춰 성장해야 했다는 거지.
+During her master’s program, Maria learned how to process complex imaging data, 복잡한 뇌 영상 데이터를 다루는 스킬을 익혔어.
+At her first job in a neuroscience startup, she learned to turn those data pipelines into real diagnostic tools hospitals actually use, 병원에서 실제로 사용하는 진단 시스템으로 바꾸는 능력을 쌓았지.
+And at DeepMind, she learned to bridge research and product, 그러니까 연구와 제품 개발을 연결하는 감각을 키웠어.
+She turned AI models into solutions that improve patient care, 환자 치료 품질을 높이는 솔루션으로 발전시킨 거야.
+The ideas we’ll cover today directly link to your coursework. 우리가 오늘 다룰 내용은 네가 배우는 과목들과 바로 연결돼.
+You’re studying machine learning and data visualization, 그리고 Maria는 실제로 그 기술들을 사용해 brain scans를 분석하고 Alzheimer’s disease의 초기 징후를 감지하고 있어.
+
+translated text:
+But here's what's important for you to do.
+At each step, she had to grow, to change and grow.
+During her Master's trial, Maria learned how to treat brain imaging data, complicated brain imaging data.
+At her first job in a hospital, she learned to turn those data associations into actual diagnostic systems, which are actually used in hospitals.
+And at Deep Mein, she learned to link research research to product development and product development.
+She turned AI models into those curative solutions,
+The ideas we'll cover today directly link to your subjects.
+You're listening to learning and data detection, and Maria's actually using those techniques to analyze Brein Scans and detect the early signs of Alzheimer's rise.
+
 batch: 8
 epoch: 1
 loss: 4.4005
@@ -33,3 +54,4 @@ rouge score:
 {'rouge1': Score(precision=1.0, recall=0.2857142857142857, fmeasure=0.4444444444444445), 'rouge2': Score(precision=1.0, recall=0.27927927927927926, fmeasure=0.43661971830985913), 'rougeL': Score(precision=1.0, recall=0.2857142857142857, fmeasure=0.4444444444444445)}
 
 {'rouge1': Score(precision=1.0, recall=0.248, fmeasure=0.3974358974358974), 'rouge2': Score(precision=1.0, recall=0.24193548387096775, fmeasure=0.38961038961038963), 'rougeL': Score(precision=1.0, recall=0.248, fmeasure=0.3974358974358974)}
+
