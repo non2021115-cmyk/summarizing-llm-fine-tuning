@@ -18,6 +18,8 @@ env:
 <br>pip install ipywidgets
 <br>python 3.11.9
 
+requirements:
+<br>pip install -r requirements.txt
 
 
 <br>Have a nice gamuuuuu
