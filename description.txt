@@ -55,4 +55,7 @@ rouge score:
 
 {'rouge1': Score(precision=1.0, recall=0.248, fmeasure=0.3974358974358974), 'rouge2': Score(precision=1.0, recall=0.24193548387096775, fmeasure=0.38961038961038963), 'rougeL': Score(precision=1.0, recall=0.248, fmeasure=0.3974358974358974)}
 
-
+About HTML index:
+Didn't finish building main function (need txt to json and finish STT developing and translator fine tuning)
+Can download and get authority to get sound files.
+Should've build API on the backend.
