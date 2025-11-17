@@ -8,8 +8,10 @@
 
 It was simply created by chatgpt and from 
 <br>https://huggingface.co/docs/transformers/ko/tasks/summarization
-<br>and
 <br>https://huggingface.co/docs/transformers/ko/training#train-a-tensorflow-model-with-keras
+<br>https://huggingface.co/learn/llm-course/chapter7/4
+
+<br>Used libraries: TF keras, pytorch
 
 env:
 <br>pip install "tensorflow==2.20.0" "tf-keras==2.20.1"
