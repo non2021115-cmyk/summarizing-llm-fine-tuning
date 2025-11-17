@@ -28,9 +28,21 @@ data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
 
 
 #data setup
-raw_datasets = load_dataset("kde4", lang1="ko", lang2="en")
-split_datasets = raw_datasets["train"].train_test_split(train_size=0.9, seed=20)
-split_datasets["train"][1]["translation"]
+
+from datasets import load_dataset
+
+data_files = {
+    "train": "data/train.jsonl",   # 여기에 네가 만든 경로
+    "test": "data/test.jsonl",
+}
+
+
+raw_datasets = load_dataset("json",  data_files=data_files)
+#split_datasets = raw_datasets["train"].train_test_split(train_size=0.9, seed=20)
+#split_datasets["train"][1]["translation"]
+split_datasets = raw_datasets
+
+
 
 
 max_length = 128 #임의의 값 적당히 크게
@@ -148,4 +160,5 @@ trainer.save_model()
 """
 
 trainer.evaluate(max_length=max_length)
+
 
