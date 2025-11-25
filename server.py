@@ -8,8 +8,12 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import whisper  # pip install -U openai-whisper
-
 import json
+from kr_to_eng_run_local_json import main as translator_run
+from run_model_json import main as sum_run
+
+translator_run()
+sum_run()
 
 # en_summary.json 파일 읽기 (server.py와 같은 폴더에 있다고 가정)
 with open("en_summary.json", "r", encoding="utf-8") as f: #en_summary.json은 자기 파일 이름으로 바꾸기
