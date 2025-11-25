@@ -8,18 +8,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import whisper  # pip install -U openai-whisper
-import json
+
 from kr_to_eng_run_local_json import main as translator_run
 from run_model_json import main as sum_run
-
-translator_run()
-sum_run()
-
-# en_summary.json 파일 읽기 (server.py와 같은 폴더에 있다고 가정)
-with open("en_summary.json", "r", encoding="utf-8") as f: #en_summary.json은 자기 파일 이름으로 바꾸기
-    EN_SUMMARY_DATA = json.load(f)  # 리스트 형태로 로드됨
-
-EN_SUMMARY_INDEX = 0  # 현재 몇 번째 문장을 쓰는지
+import os
+from datetime import datetime
 
 # ======================
 # 1. FastAPI 기본 세팅
@@ -41,7 +34,6 @@ app.add_middleware(
 # 실시간이면 tiny/base 추천
 WHISPER_MODEL_NAME = "tiny"  # "base", "small" 등으로 바꿔도 됨
 whisper_model = whisper.load_model(WHISPER_MODEL_NAME)
-
 
 # ======================
 # 3. webm(opus) -> PCM float32 변환 함수 (FFmpeg 파이프 사용, 파일 저장 X)
@@ -81,7 +73,7 @@ def webm_bytes_to_pcm_float32(
     out, err = process.communicate(input=webm_bytes)
 
     if process.returncode != 0:
-        # 변환 실패 (너무 짧은 chunk거나 포맷 문제일 수 있음)
+        # 변환 실패 (너무 짧거나 포맷 문제일 수 있음)
         # print("ffmpeg error:", err.decode("utf-8", errors="ignore"))
         return np.array([], dtype=np.float32)
 
@@ -123,29 +115,57 @@ def run_whisper_stt_on_chunk(
 
 
 # ======================
-# 5. 번역 + 요약 훅 (너가 구현해야 하는 부분)
+# 5. 번역 + 요약 훅
 # ======================
+EN_SUMMARY_JSON_PATH = "en_summary.json"    # 번역+요약 결과를 저장하는 기존 파일
+CHUNK_LOG_JSON_PATH = "chunk_log.json"      # 각 chunk별 결과를 쌓아둘 로그 파일
+
 def run_translation_and_summary(mixed_text: str) -> Dict[str, str]:
     """
-    mixed_text는 사실 지금은 안 써도 됨.
-    en_summary.json 안에 저장된 내용을 순서대로 하나씩 꺼내서 쓰는 함수.
+    1) translator_run() + sum_run()을 실행해서 en_summary.json을 최신 상태로 업데이트
+    2) en_summary.json을 다시 열어서 마지막 항목을 꺼냄
+    3) 그 안의 translation.ko / translation.en / translation.summary_en 을 리턴
+
+    mixed_text는 네 파이프라인이 파일 기반으로 이미 설계되어 있다면
+    여기서 직접 쓰지 않아도 될 수도 있음.
+    (필요하면 mixed_text를 어떤 입력 파일에 써주는 로직을 추가해도 됨.)
     """
 
-    global EN_SUMMARY_INDEX, EN_SUMMARY_DATA
+    # 1) 번역 + 요약 파이프라인 실행 → en_summary.json 갱신
+    translator_run()
+    sum_run()
 
-    if not EN_SUMMARY_DATA:
-        # 파일이 비어있거나 문제 있을 때 대비
+    # 2) en_summary.json 읽기
+    if not os.path.exists(EN_SUMMARY_JSON_PATH):
+        # 파일이 없으면 fallback (필요에 따라 메시지 수정)
         return {
             "ko": mixed_text,
-            "en": "[NO_DATA] " + mixed_text,
-            "summary_en": "[NO_DATA] " + mixed_text[:100] + "..."
+            "en": "[NO en_summary.json] " + mixed_text,
+            "summary_en": "[NO en_summary.json] " + mixed_text[:120] + "..."
         }
 
-    # 현재 인덱스에 해당하는 항목 가져오기
-    item = EN_SUMMARY_DATA[EN_SUMMARY_INDEX % len(EN_SUMMARY_DATA)]
-    EN_SUMMARY_INDEX += 1  # 다음 호출 때는 그다음 문장
+    with open(EN_SUMMARY_JSON_PATH, "r", encoding="utf-8") as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            # 파일이 깨져 있거나 쓰는 중일 때 대비
+            return {
+                "ko": mixed_text,
+                "en": "[JSON ERROR] " + mixed_text,
+                "summary_en": "[JSON ERROR] " + mixed_text[:120] + "..."
+            }
 
-    trans = item.get("translation", {})
+    if not isinstance(data, list) or not data:
+        # 리스트 아니거나 비어 있을 때 대비
+        return {
+            "ko": mixed_text,
+            "en": "[EMPTY DATA] " + mixed_text,
+            "summary_en": "[EMPTY DATA] " + mixed_text[:120] + "..."
+        }
+
+    # 3) 최신 chunk에 해당하는 마지막 요소 사용
+    last_item = data[-1]
+    trans = last_item.get("translation", {})
 
     ko = trans.get("ko", mixed_text)
     en = trans.get("en", "")
@@ -156,7 +176,62 @@ def run_translation_and_summary(mixed_text: str) -> Dict[str, str]:
         "en": en,
         "summary_en": summary_en,
     }
-    # --------------------------------------------------------------
+
+
+# ======================
+# 5-1. chunk 결과를 별도 JSON 로그로 저장
+# ======================
+def append_chunk_to_log(
+    stt_text: str,
+    trans_dict: Dict[str, str],
+    log_path: str = CHUNK_LOG_JSON_PATH,
+):
+    """
+    각 chunk마다 STT 결과 + 번역 + 요약을 하나의 entry로
+    chunk_log.json 같은 파일에 계속 쌓아줌.
+
+    구조 예시:
+    [
+      {
+        "timestamp": "...",
+        "stt": "...",
+        "translation": {
+          "ko": "...",
+          "en": "...",
+          "summary_en": "..."
+        }
+      },
+      ...
+    ]
+    """
+    entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "stt": stt_text,
+        "translation": {
+            "ko": trans_dict.get("ko", ""),
+            "en": trans_dict.get("en", ""),
+            "summary_en": trans_dict.get("summary_en", ""),
+        },
+    }
+
+    # 기존 로그 읽기
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                data = []
+        except json.JSONDecodeError:
+            data = []
+    else:
+        data = []
+
+    # 새 entry 추가
+    data.append(entry)
+
+    # 다시 저장
+    with open(log_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 # ======================
@@ -172,6 +247,7 @@ async def websocket_transcribe(ws: WebSocket):
     서버:
       - chunk 수신 -> ffmpeg로 PCM 변환 -> Whisper STT -> 번역/요약
       - JSON 배열 형태로 결과를 ws.send_text(...)로 프론트에 push.
+      - 동시에 chunk_log.json에 결과를 하나씩 쌓아서 저장.
     """
     await ws.accept()
     print("WebSocket connected")
@@ -192,8 +268,11 @@ async def websocket_transcribe(ws: WebSocket):
             if not stt_text:
                 continue
 
-            # 번역 + 요약 (네 모델로 교체)
+            # 번역 + 요약 (네 파이프라인)
             trans_dict = run_translation_and_summary(stt_text)
+
+            # === 여기서 chunk_log.json에 저장 ===
+            append_chunk_to_log(stt_text, trans_dict)
 
             # 프론트에서 기대하는 JSON 형태:
             # [
