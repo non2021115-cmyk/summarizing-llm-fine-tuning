@@ -520,37 +520,36 @@
         ws.onmessage = (event) => {
           let data = JSON.parse(event.data);
         
-          // 배열 형태라면 순회
+          // 배열 형태일 때
           if (Array.isArray(data)) {
-              data.forEach(item => {
-                  if (!item.translation) return;
+            data.forEach((item) => {
+              if (!item.translation) return;
         
-                  let ko = item.translation.ko || "";
-                  let en = item.translation.en || "";
-                  let summary = item.summary || "";  // summary가 있다면
+              const ko = item.translation.ko || "";
+              const en = item.translation.en || "";
+              const summary = item.translation.summary_en || "";
         
-                  // 왼쪽 칼럼: 한국어
-                  if (ko) appendWithTyping(rawBox, ko + "\n");
-        
-                  // 가운데 칼럼: 영어
-                  if (en) appendWithTyping(translationBox, en + "\n");
-        
-                  // 오른쪽 칼럼: 요약 (없을 수도 있음)
-                  if (summary) appendWithTyping(summaryBox, summary + "\n");
-              });
-          } 
-          // 단일 오브젝트일 경우 대비
-          else {
-              const ko = data.translation?.ko || "";
-              const en = data.translation?.en || "";
-              const summary = data.summary || "";
-        
+              // 왼쪽: 한국어/혼합 원문
               if (ko) appendWithTyping(rawBox, ko + "\n");
+        
+              // 가운데: 번역 결과(en)
               if (en) appendWithTyping(translationBox, en + "\n");
+        
+              // 오른쪽: 요약(summary_en)
               if (summary) appendWithTyping(summaryBox, summary + "\n");
+            });
+          }
+          // 단일 객체일 때
+          else {
+            const ko = data.translation?.ko || "";
+            const en = data.translation?.en || "";
+            const summary = data.translation?.summary_en || "";
+        
+            if (ko) appendWithTyping(rawBox, ko + "\n");
+            if (en) appendWithTyping(translationBox, en + "\n");
+            if (summary) appendWithTyping(summaryBox, summary + "\n");
           }
         };
-
 
         ws.onerror = (event) => {
           console.error("WebSocket error:", event);
