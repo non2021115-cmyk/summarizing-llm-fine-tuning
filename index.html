@@ -518,19 +518,39 @@
         };
 
         ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            const raw = data.raw || data.text || data.transcript || "";
-            const translation = data.translation || data.translation_en || "";
-            const summary = data.summary || data.summary_en || "";
-
-            if (raw) appendWithTyping(rawBox, raw + "\n");
-            if (translation) appendWithTyping(translationBox, translation + "\n");
-            if (summary) appendWithTyping(summaryBox, summary + "\n");
-          } catch (err) {
-            console.error("메시지 파싱 오류:", err);
+          let data = JSON.parse(event.data);
+        
+          // 배열 형태라면 순회
+          if (Array.isArray(data)) {
+              data.forEach(item => {
+                  if (!item.translation) return;
+        
+                  let ko = item.translation.ko || "";
+                  let en = item.translation.en || "";
+                  let summary = item.summary || "";  // summary가 있다면
+        
+                  // 왼쪽 칼럼: 한국어
+                  if (ko) appendWithTyping(rawBox, ko + "\n");
+        
+                  // 가운데 칼럼: 영어
+                  if (en) appendWithTyping(translationBox, en + "\n");
+        
+                  // 오른쪽 칼럼: 요약 (없을 수도 있음)
+                  if (summary) appendWithTyping(summaryBox, summary + "\n");
+              });
+          } 
+          // 단일 오브젝트일 경우 대비
+          else {
+              const ko = data.translation?.ko || "";
+              const en = data.translation?.en || "";
+              const summary = data.summary || "";
+        
+              if (ko) appendWithTyping(rawBox, ko + "\n");
+              if (en) appendWithTyping(translationBox, en + "\n");
+              if (summary) appendWithTyping(summaryBox, summary + "\n");
           }
         };
+
 
         ws.onerror = (event) => {
           console.error("WebSocket error:", event);
