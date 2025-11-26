@@ -22,6 +22,7 @@ It was simply created by chatgpt and from
 
 requirements:
 <br>pip install -r requirements.txt
+<br>Must use python 3.10 -thanks to Seongwon Choi
 
 
 <br>
