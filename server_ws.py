@@ -16,7 +16,7 @@ asr = pipeline(
     "automatic-speech-recognition",
     model="openai/whisper-tiny",
     chunk_length_s=10,
-    device="cuda:0",  # GPU 없으면 "cuda:0" 빼고 CPU로
+    device="CPU",  # GPU 없으면 "cuda:0" 빼고 CPU로
 )
 
 WS_HOST = "0.0.0.0"
