@@ -83,25 +83,41 @@ async def handle_client(websocket, path):
                 # 빈 결과면 그냥 스킵
                 continue
 
-            # -- 3) 한/영 혼합 → 영어 번역 --
-            en_text = translate_ko2en(text_ko_mixed)
-
-            # -- 4) 영어 요약 --
-            # run_model_json.summarize()는 list[str]도 받으니까 그대로 사용 가능
-            summary_text = summarize(en_text)[0]
-
-            # -- 5) 프론트로 보낼 JSON 구조 --
+            # 2) 한/영 혼합 텍스트 누적
+            buffer_ko += " " + text_chunk_ko  # 이전 누적에 이어붙임
+            
+            # 3) 일단 "이번에 새로 나온 chunk"만 번역해서 프론트에 띄우고 싶다면:
+            en_chunk = translate_ko2en(text_chunk_ko)
+            
+            # 4) 요약은 최소 글자 수/문장 단위 조건을 만족할 때만 실행
+            should_summarize = False
+            
+            if len(buffer_ko) >= MIN_SUMMARY_CHARS:
+                # 문장 끝 느낌나는 기호가 포함됐는지도 체크해볼 수 있음
+                if any(end in buffer_ko for end in [".", "?", "!", "다.", "요."]):
+                    should_summarize = True
+            
+            if should_summarize:
+                # 전체 문맥 영어로 번역 (조금 느려도 괜찮다면)
+                context_en = translate_ko2en(buffer_ko)
+                # 또는 buffer_ko 전체가 아니라 en_chunk들 누적해온 context_en을 사용해도 됨
+            
+                # 요약 실행 (문맥 전체 요약)
+                last_summary_en = summarize(context_en)[0]
+            
+                # 요약이 끝났으니 buffer를 비우거나 일부만 남기기
+                buffer_ko = ""
+            
+            # 5) 프론트로 보낼 payload 구성
             payload = {
                 "translation": {
-                    "ko": text_ko_mixed,
-                    "en": en_text,
-                    "summary_en": summary_text,
+                    "ko": text_chunk_ko,       # 이번 chunk 텍스트 (스트리밍 느낌)
+                    "en": en_chunk,            # 이번 chunk 번역
+                    "summary_en": last_summary_en,  # 가장 최근에 계산한 문단 요약
                 }
             }
-
-            await websocket.send(
-                json.dumps(payload, ensure_ascii=False)
-            )
+            
+            await websocket.send(json.dumps(payload, ensure_ascii=False))
 
     except websockets.exceptions.ConnectionClosed:
         print("[WS] client disconnected")
